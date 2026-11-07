@@ -138,6 +138,7 @@ mod tests {
     use super::*;
     use archive::fixture::{item, secs};
     use gcs::{Event, Session};
+    use std::assert_matches;
     use std::net::TcpListener;
     use std::thread::JoinHandle;
 
@@ -186,8 +187,11 @@ mod tests {
             held.get("orders-archive/retained/json/json#1.meta"),
             Some(&b"source\x1fessentials".to_vec())
         );
-        assert!(matches!(&events[0], Event::Stored(arrived)
-            if arrived.origin_uri == "gs://orders-archive/retained/json/json#1"));
+        assert_matches!(
+            &events[0],
+            Event::Stored(arrived)
+                if arrived.origin_uri == "gs://orders-archive/retained/json/json#1"
+        );
     }
 
     #[test]
