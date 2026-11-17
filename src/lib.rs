@@ -10,25 +10,25 @@
 //!
 //! A xmip-core-archive **technology** (repository-model.md): it depends on
 //! the archive capability for the [`ArchiveStore`] trait and its item,
-//! receipt and error types, and on the Cloud Storage transport technology
-//! for the requests — the JSON API with a bearer token, one connection a
-//! call. Obtaining the token is outside this crate, as it is outside the
-//! transport's: the archive is configured with one. The same four fields
-//! every archive technology carries — `data_type`, `identifier`, `bytes`,
-//! `metadata` — are laid out as `archive::layout` says: the bytes at
-//! `<prefix>/<data_type>/<identifier>`, the metadata text at the same name
-//! with `.meta` appended.
+//! receipt and error types, and on the google-cloud-storage transport
+//! technology for the requests — the JSON API with a bearer token, one
+//! connection a call. Obtaining the token is outside this crate, as it is
+//! outside the transport's: the archive is configured with one. The same
+//! four fields every archive technology carries — `data_type`,
+//! `identifier`, `bytes`, `metadata` — are laid out as `archive::layout`
+//! says: the bytes at `<prefix>/<data_type>/<identifier>`, the metadata
+//! text at the same name with `.meta` appended.
 //!
 //! An archive never deletes (ADR-0040): this one uploads and gets, nothing
-//! else. The receipt is `gcs://<bucket>/<object>` with the SHA-256 of the
-//! bytes as its checksum, and restoring checks the bytes that come back
-//! against it.
+//! else. The receipt is `google-cloud-storage://<bucket>/<object>` with the
+//! SHA-256 of the bytes as its checksum, and restoring checks the bytes
+//! that come back against it.
 
 use std::time::Duration;
 
 use archive::{ArchiveError, ArchiveItem, ArchiveReceipt, ArchiveStore};
 use archive::{checksum, layout, location, metadata};
-use gcs::Client;
+use google_cloud_storage::Client;
 
 /// An archive that keeps items as objects under one prefix of one bucket.
 pub struct GcsArchive {
@@ -93,13 +93,13 @@ impl ArchiveStore for GcsArchive {
             .put(&self.bucket, &layout::meta_key(&name), metadata.as_bytes())
             .map_err(ArchiveError::caused_by)?;
         Ok(ArchiveReceipt {
-            location: format!("gcs://{}/{name}", self.bucket),
+            location: format!("google-cloud-storage://{}/{name}", self.bucket),
             checksum: Some(checksum::sha256_hex(&item.bytes)),
         })
     }
 
     fn restore(&self, receipt: &ArchiveReceipt) -> Result<ArchiveItem, ArchiveError> {
-        let (bucket, name) = location::bucket_key("gcs", &receipt.location)?;
+        let (bucket, name) = location::bucket_key("google-cloud-storage", &receipt.location)?;
         let (data_type, identifier) =
             layout::split_key(&self.prefix, name).ok_or_else(|| ArchiveError {
                 message: format!(
@@ -137,7 +137,7 @@ impl ArchiveStore for GcsArchive {
 mod tests {
     use super::*;
     use archive::fixture::{item, secs};
-    use gcs::{Event, Session};
+    use google_cloud_storage::{Event, Session};
     use std::assert_matches;
     use std::net::TcpListener;
     use std::thread::JoinHandle;
@@ -170,7 +170,7 @@ mod tests {
         let receipt = store(&address).archive(original.clone()).expect("archive");
         assert_eq!(
             receipt.location,
-            "gcs://orders-archive/retained/json/json#1"
+            "google-cloud-storage://orders-archive/retained/json/json#1"
         );
         assert_eq!(
             receipt.checksum.as_deref(),
@@ -221,7 +221,7 @@ mod tests {
         receipt.checksum = Some("0".repeat(64));
         let changed = store.restore(&receipt).expect_err("checksum");
         assert!(changed.message.contains("not 0000"), "{changed}");
-        receipt.location = "gcs://orders-archive/retained/json/none".to_string();
+        receipt.location = "google-cloud-storage://orders-archive/retained/json/none".to_string();
         receipt.checksum = None;
         let missing = store.restore(&receipt).expect_err("missing");
         assert!(missing.message.contains("404 No such object"), "{missing}");
@@ -231,9 +231,9 @@ mod tests {
         assert!(refused.message.contains("401"), "{refused}");
         far_end.join().expect("thread");
         for location in [
-            "s3://bucket/key",
-            "gcs://bucket",
-            "gcs://orders-archive/elsewhere/n",
+            "aws-s3://bucket/key",
+            "google-cloud-storage://bucket",
+            "google-cloud-storage://orders-archive/elsewhere/n",
         ] {
             receipt.location = location.to_string();
             assert!(store.restore(&receipt).is_err(), "{location}");
