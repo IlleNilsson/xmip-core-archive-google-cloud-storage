@@ -1,4 +1,4 @@
-# xmip-core-archive-gcs
+# xmip-core-archive-google-cloud-storage
 
 Google Cloud Storage archive target: one item is one object in a bucket. A technology of [xmip-core-archive](https://github.com/IlleNilsson/xmip-core-archive).
 
