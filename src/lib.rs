@@ -20,7 +20,8 @@
 //! text at the same name with `.meta` appended.
 //!
 //! An archive never deletes (ADR-0040): this one uploads and gets, nothing
-//! else. The receipt is `google-cloud-storage://<bucket>/<object>` with the
+//! else. The receipt is `google-cloud-storage://<bucket>/<object>`, the
+//! transport's origin for the object, written by its `origin`, with the
 //! SHA-256 of the bytes as its checksum, and restoring checks the bytes
 //! that come back against it.
 
@@ -93,7 +94,7 @@ impl ArchiveStore for GcsArchive {
             .put(&self.bucket, &layout::meta_key(&name), metadata.as_bytes())
             .map_err(ArchiveError::caused_by)?;
         Ok(ArchiveReceipt {
-            location: format!("google-cloud-storage://{}/{name}", self.bucket),
+            location: google_cloud_storage::origin(&self.bucket, &name),
             checksum: Some(checksum::sha256_hex(&item.bytes)),
         })
     }
@@ -189,8 +190,8 @@ mod tests {
         );
         assert_matches!(
             &events[0],
-            Event::Stored(arrived)
-                if arrived.origin_uri == "gs://orders-archive/retained/json/json#1"
+            Event::Stored(arrived) if arrived.origin_uri == receipt.location,
+            "the receipt names the object as the transport's origin does"
         );
     }
 
@@ -205,11 +206,15 @@ mod tests {
         let (_, events) = far_end.join().expect("thread");
         assert_eq!(
             events[2],
-            Event::Retrieved("gs://orders-archive/retained/json/json#2".to_string())
+            Event::Retrieved(
+                "google-cloud-storage://orders-archive/retained/json/json#2".to_string()
+            )
         );
         assert_eq!(
             events[3],
-            Event::Retrieved("gs://orders-archive/retained/json/json#2.meta".to_string())
+            Event::Retrieved(
+                "google-cloud-storage://orders-archive/retained/json/json#2.meta".to_string()
+            )
         );
     }
 
