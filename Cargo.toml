@@ -7,7 +7,7 @@ version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/IlleNilsson/xmip-core-archive-google-cloud-storage"
-description = "Google Cloud Storage archive target: one item is one object in a bucket. A xmip-core-archive technology."
+description = "Google Cloud Storage archive target: one item is one object in a bucket, its TOML metadata a second object under .meta, each created only where none is and never written over. A xmip-core-archive technology."
 publish = false
 
 [lib]
