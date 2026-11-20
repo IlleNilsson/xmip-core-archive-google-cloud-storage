@@ -115,7 +115,7 @@ impl Named for Bucket<'_> {
             .client
             .put_new(self.name, key, bytes)
             .map_err(ArchiveError::caused_by)?;
-        Ok(if written {
+        Ok(if written.is_some() {
             Created::Created
         } else {
             Created::Exists
