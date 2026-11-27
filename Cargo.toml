@@ -1,11 +1,11 @@
 [package]
 name = "xmip-core-archive-google-cloud-storage"
-version = "0.1.0"
-edition = "2024"
-license = "AGPL-3.0-or-later"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 repository = "https://github.com/IlleNilsson/xmip-core-archive-google-cloud-storage"
 description = "Google Cloud Storage archive target: one item is one object in a bucket, its TOML metadata a second object under .meta, each created only where none is and never written over. A xmip-core-archive technology."
-publish = false
+publish.workspace = true
 
 [lib]
 path = "src/lib.rs"
@@ -23,13 +23,5 @@ google_cloud_storage = { package = "xmip-core-transport-google-cloud-storage", g
 # is enabled here so it is never part of a production build.
 archive = { package = "xmip-core-archive", git = "https://github.com/IlleNilsson/xmip-core-archive", branch = "main", features = ["test-support"] }
 
-[lints.rust]
-unsafe_code = "forbid"
-
-[lints.clippy]
-too_many_lines = "warn"
-pedantic = { level = "warn", priority = -1 }
-missing_errors_doc = "warn"
-missing_panics_doc = "warn"
-unwrap_used = "warn"
-expect_used = "allow"
+[lints]
+workspace = true
