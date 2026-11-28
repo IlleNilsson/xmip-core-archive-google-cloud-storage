@@ -13,15 +13,15 @@ path = "src/lib.rs"
 [dependencies]
 # A Technology depends on its parent Capability, never the reverse
 # (repository-model.md). The ArchiveStore trait and its types live there.
-archive = { package = "xmip-core-archive", git = "https://github.com/IlleNilsson/xmip-core-archive", branch = "main" }
+archive = { workspace = true }
 # The connection: the sibling transport technology's Client uploads and gets
 # objects with a bearer token, and its Session is the far end a test binds.
-google_cloud_storage = { package = "xmip-core-transport-google-cloud-storage", git = "https://github.com/IlleNilsson/xmip-core-transport-google-cloud-storage", branch = "main" }
+google_cloud_storage = { workspace = true }
 
 [dev-dependencies]
 # The tests archive the capability's fixture item (ADR-0044); the feature
 # is enabled here so it is never part of a production build.
-archive = { package = "xmip-core-archive", git = "https://github.com/IlleNilsson/xmip-core-archive", branch = "main", features = ["test-support"] }
+archive = { workspace = true, features = ["test-support"] }
 
 [lints]
 workspace = true
